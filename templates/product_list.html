@@ -1,0 +1,36 @@
+{% extends "master.html" %}
+
+{% block content %}
+<h2>Product List</h2>
+
+<a href="/products/create" class="btn btn-primary mb-3">Add Product</a>
+
+<table class="table table-bordered">
+    <tr>
+        <th>ID</th>
+        <th>Image</th>
+        <th>Name</th>
+        <th>Price</th>
+        <th>Category</th>
+        <th>Action</th>
+    </tr>
+
+    {% for p in products %}
+    <tr>
+        <td>{{ p.id }}</td>
+        <td>
+            {% if p.image %}
+            <img src="/static/uploads/{{ p.image }}" width="80">
+            {% endif %}
+        </td>
+        <td>{{ p.name }}</td>
+        <td>{{ p.price }}</td>
+        <td>{{ p.category.name }}</td>
+        <td>
+            <a href="/products/edit/{{ p.id }}" class="btn btn-warning btn-sm">Edit</a>
+            <a href="/products/delete/{{ p.id }}" class="btn btn-danger btn-sm">Delete</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

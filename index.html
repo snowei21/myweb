@@ -1,0 +1,34 @@
+<h2>Real-Time Clock (AJAX)</h2>
+<h1 id="datetime">Loading...</h1>
+
+<script>
+function loadDateTime() {
+    fetch('/api/servertime')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('datetime').innerText = data.datetime;
+        })
+        .catch(error => console.error(error));
+}
+// Run every 1 second
+setInterval(loadDateTime, 1000);
+// Initial load
+loadDateTime();
+</script>
+
+<h2>Real-Time Clock (AJAX)</h2>
+<h1 id="datetime">Loading...</h1>
+
+<script>
+function loadDateTime() {
+fetch('/api/servertime')
+.then(response => response.json())
+.then(data => {
+document.getElementById('datetime').innerText = data.datetime;
+})
+.catch(error => console.error(error));
+
+}
+setInterval(loadDateTime, 1000);
+loadDateTime();
+</script>

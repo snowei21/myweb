@@ -1,0 +1,139 @@
+{% extends "master.html" %}
+
+{% block content %}
+<h2 class="mt-4">Pay-Slip Upload</h2>
+<input type="file" id="slip">
+<button class="btn btn-primary" onclick="uploadSlip()">Upload</button>
+<div id="loading" style="display:none;">Uploading...</div>
+
+<div id="result"></div>
+<hr>
+<h2 class="mt-4">Orders</h2>
+<button class="btn btn-warning btn-lg mb-3" onclick="verifySlip()">Verify Slip</button>
+<table border="1" id="orderTable" class="table table-bordered mb-5">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Order No</th>
+            <th>Amount</th>
+            <th>Date</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody id="orderBody"></tbody>
+</table>
+
+<script>
+let ocrData = null;
+
+async function uploadSlip() {
+  let file = document.getElementById("slip").files[0]
+  let formData = new FormData()
+  formData.append("file", file)
+  // show loading
+  document.getElementById("loading").style.display = "block"
+  let res = await fetch("/api/pvs/upload-ocr", {
+    method: "POST",
+    body: formData
+  })
+  ocrData = await res.json()
+  // hide loading
+  document.getElementById("loading").style.display = "none"
+  showResult(ocrData)
+}
+function showResult(data) {
+  let html = `
+    <p><b>Amount:</b> ${data.amount}</p>
+    <p><b>DateTime:</b> ${data.datetime}</p>
+    <p><b>Raw Text:</b> ${data.text}</p>
+  `
+  document.getElementById("result").innerHTML = html
+}
+</script>
+
+<script>
+async function loadOrders() {
+  const res = await fetch('/api/pvs/orders');
+  const data = await res.json();
+
+  const tbody = document.getElementById('orderBody');
+  tbody.innerHTML = '';
+  data.forEach(o => {
+    tbody.innerHTML += `
+      <tr>
+        <td>${o.id}</td>
+        <td>${o.order_no}</td>
+        <td>${o.amount_total}</td>
+        <td>${o.order_date}</td>
+        <td>${o.state}</td>
+      </tr>
+    `;
+  });
+}
+
+loadOrders();
+
+function showOrderPopup(orders) {
+  let html = '';
+  orders.forEach(o => {
+      html += `
+        <div>
+          <input type="checkbox" value="${o.id}" class="order-check">
+          ${o.order_no} | ${o.amount_total} | ${o.order_date}
+        </div>
+      `;
+  });
+
+  Swal.fire({
+    title: 'Select Orders',
+    html: html,
+    confirmButtonText: 'Confirm Payment',
+    preConfirm: () => {
+      const selected = [];
+      document.querySelectorAll('.order-check:checked').forEach(el => {
+        selected.push(parseInt(el.value));
+      });
+      return selected;
+    }
+  }).then(result => {
+    if (result.isConfirmed) {
+      markPaid(result.value);
+    }
+  });
+}
+
+async function verifySlip() {
+  if (!ocrData) {
+    Swal.fire('Error', 'Please upload slip first', 'error');
+    return;
+  }
+
+  const res = await fetch('/api/pvs/verify-slip', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(ocrData)
+  });
+
+  const orders = await res.json();
+  showOrderPopup(orders);
+}
+
+async function markPaid(orderIds) {
+  if (!orderIds || orderIds.length === 0) {
+    Swal.fire('Error', 'No order selected', 'error');
+    return;
+  }
+
+  const res = await fetch('/api/pvs/mark-paid', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ order_ids: orderIds })
+  });
+
+  const data = await res.json();
+  Swal.fire('Success', 'Orders marked as paid', 'success');
+  loadOrders();
+}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% endblock %}

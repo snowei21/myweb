@@ -1,0 +1,30 @@
+{% extends "master.html" %}
+
+{% block content %}
+<h1>Product Search</h1>
+<input type="text" id="search" class="form-control" placeholder="Search product...">
+<div id="products"></div>
+
+<script>
+async function searchProducts(keyword="") {
+    let res = await fetch(`/api/products/search?search=${keyword}`)
+    let data = await res.json()
+    let html = data.map(p => `
+        <div class="card p-3 my-3">
+            <h4>${p.name}</h4>
+            <p>${p.price} THB</p>
+        </div>
+    `).join("")
+    document.getElementById("products").innerHTML = html
+}
+
+// Trigger on typing
+document.getElementById("search").addEventListener("input", function() {
+  searchProducts(this.value)
+})
+
+// Initial load
+searchProducts()
+</script>
+
+{% endblock %}
