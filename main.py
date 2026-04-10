@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+print("ทดสอบ by me")
 
 # models
 import models
