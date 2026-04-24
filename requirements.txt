@@ -1,5 +1,5 @@
 fastapi[standard]
 sqlalchemy
 jinja2
-easyocr
+# easyocr
 pytest
